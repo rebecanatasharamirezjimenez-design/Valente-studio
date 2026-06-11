@@ -5,13 +5,33 @@ let searchQuery = '';
 let currentImageData = null;
 
 function save() {
-  localStorage.setItem('valente_studio_products', JSON.stringify(products));
-  const lbl = document.getElementById('autosave-label');
-  if (lbl) {
-    const now = new Date();
-    lbl.textContent = `Guardado a las ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
-    setTimeout(() => { lbl.textContent = 'Guardado automático activo'; }, 3000);
+  try {
+    localStorage.setItem('valente_studio_products', JSON.stringify(products));
+    const lbl = document.getElementById('autosave-label');
+    if (lbl) {
+      const now = new Date();
+      lbl.textContent = `Guardado a las ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+      setTimeout(() => { lbl.textContent = 'Guardado automático activo'; }, 3000);
+    }
+    updateStorageBar();
+  } catch (e) {
+    alert('⚠️ Almacenamiento lleno. Elimina algunos productos o sus imágenes para continuar.');
   }
+}
+
+function updateStorageBar() {
+  try {
+    const data = localStorage.getItem('valente_studio_products') || '';
+    const usedKB = Math.round((data.length * 2) / 1024);
+    const limitKB = 5000;
+    const pct = Math.min(100, Math.round((usedKB / limitKB) * 100));
+    const bar = document.getElementById('storage-bar-fill');
+    const label = document.getElementById('storage-label');
+    if (!bar || !label) return;
+    bar.style.width = pct + '%';
+    bar.style.background = pct > 80 ? '#C0392B' : pct > 60 ? '#E67E22' : '#9CAF88';
+    label.textContent = `Almacenamiento: ${usedKB} KB / ~5000 KB usados (${pct}%)`;
+  } catch(e) {}
 }
 
 function exportToExcel() {
@@ -211,10 +231,23 @@ function handleImage(e) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = ev => {
-    currentImageData = ev.target.result;
-    const prev = document.getElementById('img-preview');
-    prev.src = currentImageData;
-    prev.style.display = 'block';
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 600;
+      const scale = img.width > MAX ? MAX / img.width : 1;
+      const canvas = document.createElement('canvas');
+      canvas.width  = Math.round(img.width  * scale);
+      canvas.height = Math.round(img.height * scale);
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      currentImageData = canvas.toDataURL('image/jpeg', 0.70);
+      const prev = document.getElementById('img-preview');
+      prev.src = currentImageData;
+      prev.style.display = 'block';
+      const kb = Math.round((currentImageData.length * 2) / 1024);
+      prev.title = `Imagen comprimida: ~${kb} KB`;
+    };
+    img.src = ev.target.result;
   };
   reader.readAsDataURL(file);
 }
@@ -278,7 +311,6 @@ function searchProducts(q) {
   render();
 }
 
-// Drag & drop
 const uploadArea = document.getElementById('upload-area');
 uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.style.borderColor = 'var(--mocha)'; });
 uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor = 'var(--taupe)'; });
@@ -293,3 +325,4 @@ uploadArea.addEventListener('drop', e => {
 });
 
 render();
+updateStorageBar();
