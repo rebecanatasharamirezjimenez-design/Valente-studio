@@ -40,8 +40,11 @@
     <span id="autosave-label">Guardado automático activo</span>
   </div>
   <div style="margin-bottom:18px;">
-    <div style="display:flex;justify-content:flex-end;margin-bottom:4px;">
-      <span id="storage-label" style="font-size:0.72rem;color:var(--text-light);"></span>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+      <button id="btn-compress" onclick="compressAllImages()" style="display:none;align-items:center;gap:6px;background:#E67E22;color:white;border:none;border-radius:100px;padding:6px 14px;font-size:0.78rem;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500;">
+        🗜 Comprimir fotos guardadas
+      </button>
+      <span id="storage-label" style="font-size:0.72rem;color:var(--text-light);margin-left:auto;"></span>
     </div>
     <div style="background:var(--sand);border-radius:100px;height:5px;overflow:hidden;">
       <div id="storage-bar-fill" style="height:100%;width:0%;background:var(--sage);border-radius:100px;transition:width 0.4s,background 0.4s;"></div>

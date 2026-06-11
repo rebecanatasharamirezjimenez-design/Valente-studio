@@ -28,11 +28,43 @@ function updateStorageBar() {
     const pct = Math.min(100, Math.round((usedKB / limitKB) * 100));
     const bar = document.getElementById('storage-bar-fill');
     const label = document.getElementById('storage-label');
+    const compressBtn = document.getElementById('btn-compress');
     if (!bar || !label) return;
     bar.style.width = pct + '%';
     bar.style.background = pct > 80 ? '#C0392B' : pct > 60 ? '#E67E22' : '#9CAF88';
-    label.textContent = `Almacenamiento: ${usedKB} KB / ~5000 KB usados (${pct}%)`;
+    label.textContent = `Almacenamiento: ${usedKB} KB / ~5000 KB (${pct}%)`;
+    if (compressBtn) compressBtn.style.display = pct > 50 ? 'flex' : 'none';
   } catch(e) {}
+}
+
+function compressAllImages() {
+  const withImages = products.filter(p => p.image);
+  if (withImages.length === 0) { alert('No hay imágenes guardadas.'); return; }
+
+  const btn = document.getElementById('btn-compress');
+  if (btn) { btn.textContent = '⏳ Comprimiendo...'; btn.disabled = true; }
+
+  let done = 0;
+  withImages.forEach(p => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 500;
+      const scale = img.width > MAX ? MAX / img.width : 1;
+      const canvas = document.createElement('canvas');
+      canvas.width  = Math.round(img.width  * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      p.image = canvas.toDataURL('image/jpeg', 0.60);
+      done++;
+      if (done === withImages.length) {
+        save();
+        render();
+        if (btn) { btn.textContent = '✓ Listo'; btn.disabled = false; }
+        setTimeout(() => updateStorageBar(), 300);
+      }
+    };
+    img.src = p.image;
+  });
 }
 
 function exportToExcel() {
